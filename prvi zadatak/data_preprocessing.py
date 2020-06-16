@@ -10,15 +10,16 @@ def load_and_preprocess():
     dataframe = dataframe.drop("CUST_ID", 1)
 
     #GET THE NUMBER OF MISSING VALUES BY COLUMN
+    print("Before imputations:")
     print(len(dataframe) - dataframe.count())
 
-    #CREDIT_LIMIT HAS ONLY ONE MISSING VALUE, IMPUTE IT WITH MEDIAN
-    dataframe.loc[(dataframe['CREDIT_LIMIT'].isnull()==True),'CREDIT_LIMIT'] = dataframe['CREDIT_LIMIT'].median()
-
-    #MINIMUM_PAYMENTS HAS MORE THAN 300 MISSING VALUES, IMPUTE THEM USING MULTIPLE IMPUTATION (MICE)
+    #MINIMUM_PAYMENTS HAS MORE THAN 300 MISSING VALUES
+    #CREDIT_LIMIT HAS ALSO MISSING VALUES
+    #IMPUTE THEM USING MULTIPLE IMPUTATION (MICE)
     mice = IterativeImputer()
     dataframe.iloc[:, :] = mice.fit_transform(dataframe)
 
+    print("\nAfter imputations:")
     print(len(dataframe) - dataframe.count()) #all columns should now have 0 misssing values
 
     #SCALE ALL VARIABLES
