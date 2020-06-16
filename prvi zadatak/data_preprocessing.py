@@ -21,7 +21,7 @@ def load_and_preprocess():
 
     print(len(dataframe) - dataframe.count()) #all columns should now have 0 misssing values
 
-    #SCALE ALL VARAIBLES
+    #SCALE ALL VARIABLES
     standard_scaler = StandardScaler()
     dataframe = standard_scaler.fit_transform(dataframe)
 
