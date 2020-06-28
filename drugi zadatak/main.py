@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from keras.models import Sequential
 from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import Dense, Activation, Flatten, Dropout, Conv2D, MaxPooling2D, Input
+from keras.layers import Dense, Activation, Flatten, Dropout, Conv2D, MaxPooling2D, BatchNormalization
 from keras.losses import CategoricalCrossentropy
 from keras.optimizers import Adam
 import numpy as np
@@ -75,13 +75,7 @@ def main():
         rotation_range=40
     )
     test_generator = ImageDataGenerator(
-        rescale=1. / 255.,
-        horizontal_flip=True,
-        zoom_range=0.2,
-        shear_range=0.2,
-        height_shift_range=0.2,
-        width_shift_range=0.2,
-        rotation_range=40
+        rescale=1. / 255.
     )
 
     #prepare train, validate and test iterators
@@ -94,7 +88,6 @@ def main():
         batch_size=BATCH_SIZE,
         target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
         subset="training",
-        color_mode='grayscale'
     )
     validate_iterator = data_generator.flow_from_dataframe(
         dataframe=dataframe,
@@ -105,7 +98,6 @@ def main():
         batch_size=BATCH_SIZE,
         target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
         subset="validation",
-        color_mode='grayscale'
     )
     test_iterator = test_generator.flow_from_dataframe(
         dataframe=test,
@@ -115,34 +107,36 @@ def main():
         class_mode="categorical",
         batch_size=1,
         target_size=(IMAGE_HEIGHT, IMAGE_WIDTH),
-        color_mode='grayscale'
     )
 
     #construct model
     model = Sequential()
 
     #feature extractors - convolutional and pooling layers
-    model.add(Conv2D(filters=32, kernel_size=(3,3), input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1)))
+    model.add(Conv2D(filters=32, kernel_size=(3,3), input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 3)))
     model.add(Activation('relu'))
+    #model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
 
     model.add(Conv2D(filters=64, kernel_size=(3, 3)))
     model.add(Activation('relu'))
+    #model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(filters=128, kernel_size=(3, 3)))
     model.add(Activation('relu'))
+    #model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(filters=128, kernel_size=(3, 3)))
     model.add(Activation('relu'))
+    #model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     #classifier - dense layers
     model.add(Flatten())
+    model.add(Dense(units=512, activation='relu'))
     model.add(Dropout(rate=0.5))
-    model.add(Dense(units=512))
-    model.add(Activation('relu'))
     model.add(Dense(units=3, activation='softmax'))
 
     #set optimizer and losss function
@@ -157,23 +151,18 @@ def main():
         steps_per_epoch=steps_train,
         validation_data=validate_iterator,
         validation_steps=steps_valid,
-        epochs=200
+        epochs=1000
     )
 
-    #evaluation
-    model.evaluate_generator(
-        generator=validate_iterator,
-        steps=steps_valid
-    )
-
-    #test
     steps_test = test_iterator.n // test_iterator.batch_size
     test_iterator.reset()
-    pred = model.predict_generator(test_iterator, steps=steps_test, verbose=1)
-    indices = np.argmax(pred, axis=1).tolist()
-    labels = list(map(lambda x: MAPPER[x], indices))
-    print("Training accuraccy:", str(accuracy_score(test["_label"], labels)))
-    print(test["_label"].head())
+    #evaluation
+    results = model.evaluate_generator(
+        generator=test_iterator,
+        steps=steps_test
+    )
+
+    print("Test accuraccy:", str(results[1]))
 
 if __name__ == '__main__':
     main()
