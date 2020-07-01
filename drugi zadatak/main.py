@@ -141,8 +141,8 @@ def main():
     model.add(Flatten())
 
     model.add(Dense(units=64, use_bias=False))
-    model.add(Dropout(0.5))
     model.add(ReLU())
+    model.add(Dropout(0.5))
 
     model.add(Dense(units=3, use_bias=False))
     model.add(Softmax())
