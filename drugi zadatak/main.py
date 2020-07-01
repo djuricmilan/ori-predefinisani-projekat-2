@@ -3,13 +3,21 @@ from hyperparameters import  *
 import shutil
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.layers import Dense, ReLU, Flatten, Dropout, Conv2D, MaxPooling2D, BatchNormalization, Softmax
+from tensorflow.keras.layers import Dense, ReLU, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Softmax, Dropout
 from tensorflow.keras.optimizers import Adam
 import numpy as np
-from sklearn.metrics import accuracy_score
+from tensorflow.keras.callbacks import LearningRateScheduler
+from sklearn.utils import class_weight
+
+def decay_schedule(epoch, lr):
+    # decay by 0.1 after 10 epochs
+    if epoch == 10:
+        lr = lr * 0.1
+    return lr
 
 def read_labels():
     df = pd.read_csv(LABELS_PATH)
@@ -19,8 +27,6 @@ def read_labels():
     dataframe["_label"] = "Normal"
     dataframe.loc[dataframe['Label_1_Virus_category'] == 'bacteria', '_label'] = "Bacteria"
     dataframe.loc[dataframe['Label_1_Virus_category'] == 'Virus', '_label'] = "Virus"
-    #dataframe["_label"] = pd.get_dummies(dataframe["_label"]).values.tolist()
-
 
     normal_count = dataframe.loc[dataframe["Label"] == "Normal"].shape[0]
     bacteria_count = dataframe.loc[dataframe["Label_1_Virus_category"] == "bacteria"].shape[0]
@@ -68,12 +74,6 @@ def main():
     data_generator = ImageDataGenerator(
         rescale=1. / 255.,
         validation_split=0.1,
-        horizontal_flip=True,
-        zoom_range=0.2,
-        shear_range=0.2,
-        height_shift_range=0.2,
-        width_shift_range=0.2,
-        rotation_range=40
     )
     test_generator = ImageDataGenerator(
         rescale=1. / 255.
@@ -113,22 +113,27 @@ def main():
     #    color_mode="grayscale"
     #)
 
+    #compute class weights for imbalanced dataset
+    class_weights = class_weight.compute_class_weight('balanced', np.unique(dataframe['_label']), dataframe['_label'])
+    class_weights = dict(enumerate(class_weights))
+    print(class_weights)
+
     #construct model
     model = Sequential()
 
     #feature extractors - convolutional and pooling layers
     model.add(Conv2D(filters=32, kernel_size=(3,3), use_bias=False, input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1)))
-    model.add(BatchNormalization(momentum=0.8))
+    model.add(BatchNormalization(momentum=0.9))
     model.add(ReLU())
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(filters=64, kernel_size=(3, 3), use_bias=False))
-    model.add(BatchNormalization(momentum=0.8))
+    model.add(BatchNormalization(momentum=0.9))
     model.add(ReLU())
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(filters=64, kernel_size=(3, 3), use_bias=False))
-    model.add(BatchNormalization(momentum=0.8))
+    model.add(BatchNormalization(momentum=0.9))
     model.add(ReLU())
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
@@ -136,13 +141,17 @@ def main():
     model.add(Flatten())
 
     model.add(Dense(units=64, use_bias=False))
-    model.add(BatchNormalization(momentum=0.8))
+    model.add(Dropout(0.5))
     model.add(ReLU())
 
     model.add(Dense(units=3, use_bias=False))
-    model.add(BatchNormalization(momentum=0.8))
     model.add(Softmax())
 
+    for layer in model.layers:
+        if "BatchNormalization" in layer.__class__.__name__:
+            layer.trainable = True
+
+    lr_scheduler = LearningRateScheduler(decay_schedule)
     #set optimizer and losss function
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=LEARNING_RATE), metrics=['accuracy'])
     print(model.summary())
@@ -150,13 +159,32 @@ def main():
     #training
     steps_train = train_iterator.n // train_iterator.batch_size
     steps_valid = validate_iterator.n // validate_iterator.batch_size
-    model.fit_generator(
+    history = model.fit_generator(
         generator=train_iterator,
         steps_per_epoch=steps_train,
         validation_data=validate_iterator,
         validation_steps=steps_valid,
-        epochs=200
+        epochs=40,
+        callbacks=[lr_scheduler],
+        class_weight=class_weights
     )
+
+    # summarize history for accuracy
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
 
     #steps_test = test_iterator.n // test_iterator.batch_size
     #test_iterator.reset()
