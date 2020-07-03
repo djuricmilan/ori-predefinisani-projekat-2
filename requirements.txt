@@ -19,7 +19,7 @@ idna==2.9
 importlib-metadata==1.6.1
 Jinja2==2.11.2
 joblib==0.15.1
-Keras==2.3.1
+Keras @ git+https://github.com/datumbox/keras@aa27d7d5ee588291d88f82da0452d1377e284ac3
 Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.2
 kiwisolver==1.2.0

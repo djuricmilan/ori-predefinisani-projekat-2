@@ -1,6 +1,7 @@
 from data_preprocessing import load_and_preprocess
 import seaborn as sb
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 import pandas as pd
 def main():
@@ -10,6 +11,10 @@ def main():
 
     kmeans = KMeans(n_clusters=5)
     label = kmeans.fit_predict(X_chosen)
+
+    #dbscan = DBSCAN(eps=0.5, min_samples=5)
+    #label = dbscan.fit_predict(X_chosen)
+
     # create a 'cluster' column
     X_chosen['cluster'] = label
     chosen_columns.append('cluster')

@@ -1,10 +1,31 @@
 from data_preprocessing import load_and_preprocess
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
+from sklearn.cluster import MeanShift
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import Birch
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sb
+import math
+
+def calculate_kn_distance(X,k):
+
+    kn_distance = []
+    for i in range(len(X)):
+        eucl_dist = []
+        for j in range(len(X)):
+            eucl_dist.append(
+                math.sqrt(
+                    ((X[i,0] - X[j,0]) ** 2) +
+                    ((X[i,1] - X[j,1]) ** 2)))
+
+        eucl_dist.sort()
+        kn_distance.append(eucl_dist[k])
+
+    return kn_distance
 
 suma = 0
 cnt = 0
@@ -68,8 +89,28 @@ def main():
 
     # according to plots, chose 4,5 or 6 clusters
     #we chose 5 clusters
+
     alg = KMeans(n_clusters=5)
     label = alg.fit_predict(reduced_dataframe)
+
+    # *** ALTERNATIVE ALGORITHMS ***
+    #eps_dist = calculate_kn_distance(reduced_dataframe, 10)
+    #plt.hist(eps_dist, bins=30)
+    #plt.ylabel('n')
+    #plt.xlabel('Epsilon distance')
+
+    #dbscan = DBSCAN(eps=1, min_samples=10)
+    #label = dbscan.fit_predict(reduced_dataframe)
+
+    #ms = MeanShift()
+    #label = ms.fit_predict(reduced_dataframe)
+
+    #aggloerative = AgglomerativeClustering(n_clusters=5)
+    #label = aggloerative.fit_predict(reduced_dataframe)
+
+    #birch = Birch(threshold=0.3)
+    #label = birch.fit_predict(reduced_dataframe)
+
 
     fig, ax = plt.subplots()
     ax.set_title("5 clusters according to 5 principle components.")
