@@ -8,7 +8,7 @@ import numpy as np
 def main():
     min_clusters = 2
     max_clusters = 15
-    X = load_and_preprocess()
+    _, X = load_and_preprocess()
     inertia = []
 
     #STORE INERTIA OF EACH CLUSTER IN ORDER TO VISUALIZE IT LATER (THE ELBOW METHOD)
