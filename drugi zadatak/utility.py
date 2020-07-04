@@ -1,6 +1,7 @@
-DIR_NAME = "../../chest_xray_data_set"
-TEST_DIR_NAME = "../../test_data_set"
-LABELS_PATH = "../../chest_xray_data_set/metadata/chest_xray_metadata.csv"
+DIR_NAME = "../../train"
+TEST_DIR_NAME = "../../test/test"
+LABELS_PATH = "../../train/metadata/labels.csv"
+TEST_LABELS_PATH = "../../test/labels.csv"
 MAPPER = {
     0: "Normal",
     1: "Bacteria",
