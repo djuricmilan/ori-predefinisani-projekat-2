@@ -27,8 +27,16 @@ def calculate_kn_distance(X,k):
 
     return kn_distance
 
+suma = 0
+cnt = 0
+
+def avg_cluster(row):
+    global suma, cnt
+    suma += row['PURCHASES_FREQUENCY'] if row['CLUSTER_5'] == 2 else 0
+    cnt += 1 if row['CLUSTER_5'] == 2 else 0
+
 def main():
-    X = load_and_preprocess()
+    _, X = load_and_preprocess()
 
     # PCA
     min_clusters = 2
@@ -115,11 +123,32 @@ def main():
                       "MONTHLY_AVERAGE_CASH_ADVANCE"]
     X_chosen = pd.DataFrame(X[chosen_columns])
     # create a 'cluster' column
+
     X_chosen['CLUSTER_5'] = label
     chosen_columns.append('CLUSTER_5')
     # make a Seaborn pairplot
-    sb.pairplot(X_chosen, hue='CLUSTER_5', vars=chosen_columns, diag_kind='kde', size=3)
+    # sb.pairplot(X_chosen, hue='CLUSTER_5', vars=chosen_columns, diag_kind='kde', size=3)
+
+    # ALL FEATURES ALL CLUSTERS
+    dataframe = pd.read_csv("credit_card_data.csv")
+    dataframe["BALANCE_TO_CREDIT_LIMIT_RATIO"] = dataframe["BALANCE"] / dataframe["CREDIT_LIMIT"]
+
+    # 2. PAYMENTS TO MINIMUM PAYMENTS RATIO - SHOULD BE HIGH IF CREDIT CARD USER IS RESPONSIBLE
+    dataframe["PAYMENT_TO_MIN_PAYMENT_RATIO"] = dataframe["PAYMENTS"] / dataframe["MINIMUM_PAYMENTS"]
+
+    # 3. MONTHLY AVERAGE PURCHASES AND CASH ADVANCE - IMPORTANT SINCE TENURE VARIES SIGNIFICANTLY AMONG CREDIT CARD HOLDERS
+    dataframe["MONTHLY_AVERAGE_PURCHASES"] = dataframe["PURCHASES"] / dataframe["TENURE"]
+    dataframe["MONTHLY_AVERAGE_CASH_ADVANCE"] = dataframe["CASH_ADVANCE"] / dataframe["TENURE"]
+    dataframe['CLUSTER_5'] = label
+    dataframe.apply(avg_cluster, axis=1)
+    global suma, cnt
+    print(suma/cnt)
+    for c in dataframe:
+        grid= sb.FacetGrid(dataframe, col='CLUSTER_5')
+        grid.map(plt.hist, c)
     plt.show()
+
+
 
 if __name__ == '__main__':
     main()

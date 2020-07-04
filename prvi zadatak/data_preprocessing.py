@@ -43,6 +43,7 @@ def load_and_preprocess():
     dataframe["MONTHLY_AVERAGE_PURCHASES"] = dataframe["PURCHASES"] / dataframe["TENURE"]
     dataframe["MONTHLY_AVERAGE_CASH_ADVANCE"] = dataframe["CASH_ADVANCE"] / dataframe["TENURE"]
 
+    original = dataframe
     #dataframe.plot(kind='box')
     #plt.show()
     # perform quantile clipping in order to treat outliers
@@ -55,7 +56,8 @@ def load_and_preprocess():
     scaled = standard_scaler.fit_transform(dataframe.values)
     dataframe = pd.DataFrame(scaled, index=dataframe.index, columns=dataframe.columns)
 
-    return dataframe
+    return original, dataframe
 
 if __name__ == '__main__':
-    load_and_preprocess()
+    original, df = load_and_preprocess()
+    pass
