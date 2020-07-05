@@ -9,5 +9,14 @@ zakljucak: overfit se drasticno smanjio sto se moze videti i na acc/loss plot-u,
 Slabije performanse na test skupu u odnosu na validacioni skup je uvecan broj "normalnih" pluca  test skupu.
 Dodatni dropout je usporio trening tako da bi imalo smisla pustiti ovaj model da se trenira jos nekoliko epoha.
 
-MODEL 3: izbacen dropout i dense layeri i zamenjeni sa global average pooling-om. Dodat jos jedan konvolucioni sloj
-test acc: /
+MODEL 4: augmentacija podataka i dodavanje jednog conv i dense layer-a
+test acc: 85.42%
+napomena: na validacionom skupu u toku treniranja maksimalni acc je 82%, tako da test acc treba uzeti sa rezervom
+
+MODEL 5: augmentacija podataka i povecanje neurona po slojevima
+test acc: 86.70%
+napomena: na validacionom skupu u toku treniranja maksimalni acc je 83%, tako da test acc treba uzeti sa rezervom
+
+MODEL 6: augmentacija podataka i dodatno povecanje neurona po slojevima
+test acc: 86.21%
+napomena: na validacionom skupu u toku treniranja maksimalni acc je 83%, tako da test acc treba uzeti sa rezervom

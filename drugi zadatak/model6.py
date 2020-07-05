@@ -18,22 +18,22 @@ from sklearn.utils import class_weight
 def read_labels(path):
     df = pd.read_csv(path)
     dataframe = df.query("Label == 'Normal' | Label_1_Virus_category == 'bacteria' | Label_1_Virus_category == 'Virus'")
-    # excluded_count = df.shape[0] - dataframe.shape[0]
+    excluded_count = df.shape[0] - dataframe.shape[0]
 
     dataframe["_label"] = "Normal"
     dataframe.loc[dataframe['Label_1_Virus_category'] == 'bacteria', '_label'] = "Bacteria"
     dataframe.loc[dataframe['Label_1_Virus_category'] == 'Virus', '_label'] = "Virus"
 
-    # normal_count = dataframe.loc[dataframe["Label"] == "Normal"].shape[0]
-    # bacteria_count = dataframe.loc[dataframe["Label_1_Virus_category"] == "bacteria"].shape[0]
-    # virus_count = dataframe.loc[dataframe["Label_1_Virus_category"] == "Virus"].shape[0]
+    normal_count = dataframe.loc[dataframe["Label"] == "Normal"].shape[0]
+    bacteria_count = dataframe.loc[dataframe["Label_1_Virus_category"] == "bacteria"].shape[0]
+    virus_count = dataframe.loc[dataframe["Label_1_Virus_category"] == "Virus"].shape[0]
 
-    # print("\n*****NUMBER OF SAMPLES READ FROM CSV*****")
-    # print("Normal count:", str(normal_count))
-    # print("Bacteria count:", str(bacteria_count))
-    # print("Virus count:", str(virus_count))
-    # print("Excluded: ", str(excluded_count))
-    # print("Total number of training samples: ", str(dataframe.shape[0]))
+    print("\n*****NUMBER OF SAMPLES READ FROM CSV*****")
+    print("Normal count:", str(normal_count))
+    print("Bacteria count:", str(bacteria_count))
+    print("Virus count:", str(virus_count))
+    print("Excluded: ", str(excluded_count))
+    print("Total number of training samples: ", str(dataframe.shape[0]))
 
     return dataframe
 
@@ -140,7 +140,7 @@ def main():
     model.add(LeakyReLU(0.1))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(filters=128, kernel_size=(3, 3), use_bias=False))
+    model.add(Conv2D(filters=256, kernel_size=(3, 3), use_bias=False))
     model.add(BatchNormalization(momentum=0.9))
     model.add(LeakyReLU(0.1))
     model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -148,10 +148,15 @@ def main():
     # classifier
     model.add(Flatten())
 
+    model.add(Dense(256, use_bias=False))
+    model.add(BatchNormalization(momentum=0.9))
+    model.add(LeakyReLU(0.1))
+    model.add(Dropout(0.5))
+
     model.add(Dense(128, use_bias=False))
     model.add(BatchNormalization(momentum=0.9))
     model.add(LeakyReLU(0.1))
-    model.add(Dropout(0.4))
+    model.add(Dropout(0.5))
 
     model.add(Dense(units=3))
     model.add(Softmax())
@@ -172,7 +177,7 @@ def main():
         steps_per_epoch=steps_train,
         validation_data=validate_iterator,
         validation_steps=steps_valid,
-        epochs=100,
+        epochs=250,
         callbacks=[mcp_save, reduce_lr_loss],
         class_weight=class_weights
     )

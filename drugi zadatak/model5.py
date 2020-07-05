@@ -148,12 +148,12 @@ def main():
     # classifier
     model.add(Flatten())
 
-    model.add(Dense(64, use_bias=False))
+    model.add(Dense(256, use_bias=False))
     model.add(BatchNormalization(momentum=0.9))
     model.add(LeakyReLU(0.1))
     model.add(Dropout(0.4))
 
-    model.add(Dense(64, use_bias=False))
+    model.add(Dense(128, use_bias=False))
     model.add(BatchNormalization(momentum=0.9))
     model.add(LeakyReLU(0.1))
     model.add(Dropout(0.4))
@@ -177,7 +177,7 @@ def main():
         steps_per_epoch=steps_train,
         validation_data=validate_iterator,
         validation_steps=steps_valid,
-        epochs=100,
+        epochs=250,
         callbacks=[mcp_save, reduce_lr_loss],
         class_weight=class_weights
     )

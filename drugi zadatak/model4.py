@@ -12,6 +12,8 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from sklearn.utils import class_weight
+from sklearn.metrics import classification_report, confusion_matrix
+
 
 def read_labels(path):
     df = pd.read_csv(path)
@@ -161,8 +163,9 @@ def main():
     print(model.summary())
 
     #training
+    """ 
     mcp_save = ModelCheckpoint('weights/best_val_loss_model4.h5', save_best_only=True, monitor='val_loss', mode='min')
-    reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1, mode='min', min_lr=0.00001)
+    reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=8, verbose=1, mode='min', min_lr=0.00001)
 
     steps_train = train_iterator.n // train_iterator.batch_size
     steps_valid = validate_iterator.n // validate_iterator.batch_size
@@ -171,7 +174,7 @@ def main():
         steps_per_epoch=steps_train,
         validation_data=validate_iterator,
         validation_steps=steps_valid,
-        epochs=100,
+        epochs=120,
         callbacks=[mcp_save, reduce_lr_loss],
         class_weight=class_weights
     )
@@ -192,6 +195,7 @@ def main():
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
+    """
 
     steps_test = test_iterator.n // test_iterator.batch_size
     test_iterator.reset()
@@ -204,7 +208,11 @@ def main():
         generator=test_iterator,
         steps=steps_test,
     )
+    print(model.metrics_names)
+    print(results)
     print("Test accuraccy:", str(results[1]))
 
+
 if __name__ == '__main__':
+
     main()
